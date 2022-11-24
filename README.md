@@ -11,6 +11,10 @@ Requires Python 3 (to be safe, use 3.6 and above)
 3. Add current_slideshow_item.py in the Scripts tab.
 4. On the side panel, select the image slide show source and the text source.
 
+## Limitations
+If you rename a selected source, you will have to reselect in Tools > Scripts.
+This is due to scripting limitations.
+
 ## Contact Me
 Although there is a discussion tab in these forums, I would see your message
 faster if you ping me (@CodeYan) in the [OBS Discord server](https://discord.gg/obsproject),
