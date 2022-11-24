@@ -119,10 +119,8 @@ def script_update(settings):
         for signal in slideshow_update_signals:
             obs.signal_handler_connect(slideshow_sh, signal, sync_text)
 
-        # Weak references: `obs_weak_source_get_source` will return None if the source is destroyed
-        # so we don't need to keep getting the source using the name in the signal callback
-        # Keeping only the strong reference as a global variable is a problem, because you would
-        # have to free it when it is destroyed, or when a different source is selected
+        # Weak references let us keep a reference in a global variable, without
+        # preventing the source from being destroyed.
         slideshow_weak_source = obs.obs_source_get_weak_source(slideshow_source)
         text_weak_source = obs.obs_source_get_weak_source(text_source)
     obs.obs_source_release(slideshow_source)
