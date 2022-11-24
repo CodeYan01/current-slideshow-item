@@ -44,12 +44,14 @@ def get_slideshow_current_index(slideshow_source):
     return current_index
 
 def script_description():
-    return "Updates the selected text source with the file name of the currently shown image in the selected image slide show source"
+    return ("Updates the selected text source with the file name of the currently shown image in the selected image slide show source."
+            "<br>Due to scripting limitations, if you rename the sources that are selected, you have to reselect them.")
 
-def script_properties():
-    props = obs.obs_properties_create()
-    slideshow_src_list = obs.obs_properties_add_list(props, "slideshow_src", "Image Slideshow Source", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
-    text_src_list = obs.obs_properties_add_list(props, "text_src", "Text Source", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+def refresh_lists(props, prop):
+    slideshow_src_list = obs.obs_properties_get(props, "slideshow_src")
+    text_src_list = obs.obs_properties_get(props, "text_src")
+    obs.obs_property_list_clear(slideshow_src_list)
+    obs.obs_property_list_clear(text_src_list)
 
     sources = obs.obs_enum_sources()
     slideshow_sources = [NO_SOURCE_SELECTED]
@@ -65,6 +67,16 @@ def script_properties():
         obs.obs_property_list_add_string(slideshow_src_list, source_name, source_name)
     for source_name in text_sources:
         obs.obs_property_list_add_string(text_src_list, source_name, source_name)
+
+    return True # Refresh properties
+
+def script_properties():
+    props = obs.obs_properties_create()
+    obs.obs_properties_add_list(props, "slideshow_src", "Image Slideshow Source", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_properties_add_list(props, "text_src", "Text Source", obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    obs.obs_properties_add_button(props, "refresh_list", "Refresh Source Lists", refresh_lists)
+
+    refresh_lists(props, None)
 
     return props
 
@@ -89,12 +101,13 @@ def script_update(settings):
             obs.obs_source_release(slideshow_source)
         slideshow_source_name = new_slideshow_source_name
 
+    obs.obs_weak_source_release(slideshow_weak_source)
+    obs.obs_weak_source_release(text_weak_source)
+    slideshow_weak_source = None
+    text_weak_source = None
+
     if (slideshow_source_name == NO_SOURCE_SELECTED or
         text_source_name == NO_SOURCE_SELECTED):
-        obs.obs_weak_source_release(slideshow_weak_source)
-        obs.obs_weak_source_release(text_weak_source)
-        slideshow_weak_source = None
-        text_weak_source = None
         return
 
     slideshow_source = obs.obs_get_source_by_name(slideshow_source_name)
@@ -142,6 +155,7 @@ def sync_text(calldata=None):
     file_path = obs.obs_data_get_string(item_data, "value")
     obs.obs_data_release(item_data)
     obs.obs_data_array_release(files_array)
+    obs.obs_data_release(slideshow_source_settings)
 
     if file_path:
         stripped_file_name = Path(file_path).stem
